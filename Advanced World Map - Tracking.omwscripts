@@ -1,0 +1,6 @@
+GLOBAL: scripts/advanced_world_map_tracking/global.lua
+CUSTOM: scripts/advanced_world_map_tracking/objectLocal.lua
+PLAYER: scripts/advanced_world_map_tracking/player.lua
+MENU: scripts/advanced_world_map_tracking/settings.lua
+
+PLAYER: scripts/advanced_world_map_tracking/spellDetection.lua
