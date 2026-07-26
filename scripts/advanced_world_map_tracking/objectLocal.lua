@@ -4,6 +4,7 @@ local Item = require("openmw.types").Item
 
 
 local function onInactive()
+    if not self.cell then return end
     core.sendGlobalEvent("advWMap_tracking:objectInactive", {self, self.id, self.recordId, not self.cell.isExterior and self.cell.id or nil})
 end
 

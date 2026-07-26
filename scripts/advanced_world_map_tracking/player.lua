@@ -362,6 +362,7 @@ return {
     },
     eventHandlers = {
         ["advWMap_tracking:addActiveObject"] = function(object)
+            if not object or not object:isValid() or not object.cell then return end
             local handler, isNew = activeObjects.add(object, true)
             addMarkersForObject(handler)
         end,
@@ -371,6 +372,7 @@ return {
         end,
 
         ["advWMap_tracking:tempObjectRequest"] = function (object)
+            if not object or not object:isValid() or not object.cell then return end
             local handler, isNew = activeObjects.add(object)
             if isNew then
                 addMarkersForObject(handler)
