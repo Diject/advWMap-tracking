@@ -119,6 +119,15 @@ async:newUnsavableSimulationTimer(0.01, function ()
 end)
 
 
+local callbacks = {
+    _markerRegistered = nil,
+    _templateAdded = nil,
+    _templateRemoved = nil,
+    _markerAdded = nil,
+    _markerRemoved = nil,
+}
+
+
 
 ---@param params advWMap_tracking.markerTemplateData
 ---@return string?
@@ -126,15 +135,20 @@ local function addTemplate(params)
     params.id = params.id or uniqueId.get()
     mapData.addTemplate(params.id, params)
 
+    if callbacks._templateAdded then callbacks._templateAdded(params) end
+
     return params.id
 end
 
 
 ---@param markerData advWMap_tracking.markerData
+---@param object advWMap_tracking.objectHandler|GameObject?
 local function registerMarker(markerData, object)
     if markerData.invalid then return end
 
-    activeMarkers.register(markerData, object)
+    activeMarkers.register(markerData, object) ---@diagnostic disable-line: param-type-mismatch
+
+    if callbacks._markerRegistered then callbacks._markerRegistered(markerData, object) end
 end
 
 
@@ -275,17 +289,27 @@ local function addMarker(data)
     markerData.groupId = common.defaultMarkerLabel
     mapData.addMarker(markerData.id, markerData.groupId, markerData)
 
+    if callbacks._markerAdded then callbacks._markerAdded(markerData) end
+
     return markerData.id
 end
 
 
 local function removeMarker(markerId)
-    return mapData.removeMarker(markerId, common.defaultMarkerLabel)
+    local res = mapData.removeMarker(markerId, common.defaultMarkerLabel)
+
+    if res and callbacks._markerRemoved then callbacks._markerRemoved(markerId) end
+
+    return res
 end
 
 
 local function removeTemplate(templateId)
-    return mapData.removeTemplate(templateId)
+    local res = mapData.removeTemplate(templateId)
+
+    if res and callbacks._markerRemoved then callbacks._markerRemoved(templateId) end
+
+    return res
 end
 
 
@@ -361,6 +385,7 @@ return {
         update = updateMarkers,
         getMarkers = getMarkers,
         isInitialized = isInitialized,
+        _callbacks = callbacks,
     },
     eventHandlers = {
         ["advWMap_tracking:addActiveObject"] = function(object)

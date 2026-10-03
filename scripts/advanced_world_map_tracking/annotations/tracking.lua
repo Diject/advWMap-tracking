@@ -22,6 +22,23 @@ local EVENT = {
 ---@field template AdvWMap_tracking.TemplateData
 ---@field object GameObject?
 
+---@class AdvWMap_tracking.objectHandler
+---@field __type string always "objHandler"
+---@field object GameObject
+---@field recordId string
+---@field id string
+---@field type any -- object type (one of the tables from openmw.types)
+---@field cell Cell? -- the cell where the object currently is; nil for objects in an inventory or a container
+---@field position Vector3? -- object position; nil if the object has no cell
+---@field getPos fun(self: AdvWMap_tracking.objectHandler): Vector3? -- returns the object position
+---@field hasItem fun(self: AdvWMap_tracking.objectHandler, itemId: string, countUnresolved: boolean?): boolean -- returns true if the object has at least one item with the given ID
+---@field isInMapCell fun(self: AdvWMap_tracking.objectHandler, cellId: string?): boolean -- returns true if the object is in the given cell (nil cellId means any exterior cell)
+---@field isAlive fun(self: AdvWMap_tracking.objectHandler): boolean -- returns true if the object is an alive actor
+---@field isActive fun(self: AdvWMap_tracking.objectHandler): boolean -- returns the active flag
+---@field isEnabled fun(self: AdvWMap_tracking.objectHandler): boolean -- returns true if the object is valid, enabled and has a positive count
+---@field isVisible fun(self: AdvWMap_tracking.objectHandler): boolean -- returns true if the object is visible (scale > 0, enabled, count > 0)
+---@field isValid fun(self: AdvWMap_tracking.objectHandler): boolean -- returns true if the object handler is valid
+
 ---@class AdvWMap_tracking.TemplateData
 ---@field path string
 ---@field pathA string?
@@ -64,6 +81,14 @@ local EVENT = {
 ---@field onUpdate (fun(marker: AdvWMap_tracking.MarkerData, template: AdvWMap_tracking.TemplateData, object: GameObject?))|nil -- triggered when the marker updates
 
 
+---@class AdvWMap_tracking.Callbacks
+---@field _markerRegistered fun(markerData: AdvWMap_tracking.MarkerData, object: AdvWMap_tracking.objectHandler|GameObject?)? -- called when a marker is registered for an object or position
+---@field _templateAdded fun(template: AdvWMap_tracking.TemplateData)? -- called when a template is added
+---@field _templateRemoved fun(templateId: string)? -- called when a template is removed
+---@field _markerAdded fun(markerData: AdvWMap_tracking.MarkerData)? -- called when a marker is added
+---@field _markerRemoved fun(markerId: string)? -- called when a marker is removed
+
+
 ---@class AdvWMap_tracking.Interface
 ---@field version integer
 ---@field isInitialized fun(): boolean
@@ -77,3 +102,4 @@ local EVENT = {
 ---@field isValid fun(id: string): boolean -- returns false if the marker/template has been removed
 ---@field getMarkers fun(groupId: string): AdvWMap_tracking.MarkerData[] -- returns markers for the specified group (cell ID / `__positions__` / `__world_cell__` for position markers, `__objects__` for object markers, `__types__` for type markers, `__records__` for record markers or object ID/type/recordId for object-based markers); returns an empty list if no markers are found
 ---@field update fun()
+---@field _callbacks AdvWMap_tracking.Callbacks
