@@ -110,34 +110,34 @@ local function removeRegisteredMarkers(activeData, id)
     for _, marker in pairs(regData.markers) do
         ---@type activeMarkers.markerUserdata
         local userData = marker:getUserData()
-        if not userData then goto continue end
+        if userData then
 
-        for i, mkd, mkt in userData:dataIterator() do
-            if mkd.id == id then
-                if regData.type == markerType.object then
-                    activeData.objectMarkers[userData.objId] = nil
-                elseif regData.type == markerType.pos then
-                    activeData.posMarkers[userData.posHash] = nil
-                end
-                userData:removeMarkerData(i)
-            end
-        end
-
-        if not userData:hasData() then
-            if activeData then
-                if userData.objId then
-                    activeData.objectMarkers[userData.objId] = nil
-                else
-                    activeData.posMarkers[userData.posHash] = nil
+            for i, mkd, mkt in userData:dataIterator() do
+                if mkd.id == id then
+                    if regData.type == markerType.object then
+                        activeData.objectMarkers[userData.objId] = nil
+                    elseif regData.type == markerType.pos then
+                        activeData.posMarkers[userData.posHash] = nil
+                    end
+                    userData:removeMarkerData(i)
                 end
             end
 
-            marker:destroy()
-        else
-            userData:updateMarker()
-        end
+            if not userData:hasData() then
+                if activeData then
+                    if userData.objId then
+                        activeData.objectMarkers[userData.objId] = nil
+                    else
+                        activeData.posMarkers[userData.posHash] = nil
+                    end
+                end
 
-        ::continue::
+                marker:destroy()
+            else
+                userData:updateMarker()
+            end
+
+        end
     end
 
     activeData.registered[id] = nil
@@ -222,70 +222,70 @@ local function createMarker(activeData, markerData, obj, pos, grid, uiTemplate)
                     local textLists = {}
 
                     for i, dt in ipairs(userDataMeta:getSortedData()) do
-                        if not userDataMeta:isDataVisible(dt) then goto continue end
-                        local templ = dt[2]
+                        if userDataMeta:isDataVisible(dt) then
+                            local templ = dt[2]
 
-                        if templ.tText then
+                            if templ.tText then
 
-                            local function addText(text)
-                                local t, listId = tags.replace(text, obj)
+                                local function addText(text)
+                                    local t, listId = tags.replace(text, obj)
 
-                                local tooltipWidth = not listId and math.min(
-                                    ---@diagnostic disable-next-line: undefined-field
-                                    stringLib.length(t) * config.data.ui.fontSize * config.data.ui.textHeightMul,
-                                    uiUtils.getTooltipWidth()
-                                ) or uiUtils.getTooltipWidth()
+                                    local tooltipWidth = not listId and math.min(
+                                        ---@diagnostic disable-next-line: undefined-field
+                                        stringLib.length(t) * config.data.ui.fontSize * config.data.ui.textHeightMul,
+                                        uiUtils.getTooltipWidth()
+                                    ) or uiUtils.getTooltipWidth()
 
-                                if listId and textLists[listId] then
-                                    table.insert(textLists[listId].texts, t)
-                                    return
-                                end
-
-                                local elem = {
-                                    type = ui.TYPE.TextEdit,
-                                    props = {
-                                        text = listId and "@list:"..listId.."@" or t,
-                                        textColor = config.data.ui.defaultColor, ---@diagnostic disable-line: undefined-field
-                                        textSize = config.data.ui.fontSize, ---@diagnostic disable-line: undefined-field
-                                        anchor = util.vector2(0.5, 0.5),
-                                        size = util.vector2(tooltipWidth, 0),
-                                        multiline = true,
-                                        wordWrap = true,
-                                        textAlignH = ui.ALIGNMENT.Center,
-                                        textAlignV = ui.ALIGNMENT.Center,
-                                        readOnly = true,
-                                        autoSize = true,
-                                    }
-                                }
-
-                                if listId then
-                                    textLists[listId] = {elem = elem, texts = {t}}
-                                end
-
-                                tooltipContent:add(elem)
-                            end
-
-                            if type(templ.tText) == "table" then
-                                for _, text in ipairs(templ.tText) do ---@diagnostic disable-line: param-type-mismatch
-                                    if text ~= "" and (obj or text ~= "@name@") then
-                                        addText(text)
+                                    if listId and textLists[listId] then
+                                        table.insert(textLists[listId].texts, t)
+                                        return
                                     end
+
+                                    local elem = {
+                                        type = ui.TYPE.TextEdit,
+                                        props = {
+                                            text = listId and "@list:"..listId.."@" or t,
+                                            textColor = config.data.ui.defaultColor, ---@diagnostic disable-line: undefined-field
+                                            textSize = config.data.ui.fontSize, ---@diagnostic disable-line: undefined-field
+                                            anchor = util.vector2(0.5, 0.5),
+                                            size = util.vector2(tooltipWidth, 0),
+                                            multiline = true,
+                                            wordWrap = true,
+                                            textAlignH = ui.ALIGNMENT.Center,
+                                            textAlignV = ui.ALIGNMENT.Center,
+                                            readOnly = true,
+                                            autoSize = true,
+                                        }
+                                    }
+
+                                    if listId then
+                                        textLists[listId] = {elem = elem, texts = {t}}
+                                    end
+
+                                    tooltipContent:add(elem)
                                 end
-                            else
-                                addText(templ.tText)
+
+                                if type(templ.tText) == "table" then
+                                    for _, text in ipairs(templ.tText) do ---@diagnostic disable-line: param-type-mismatch
+                                        if text ~= "" and (obj or text ~= "@name@") then
+                                            addText(text)
+                                        end
+                                    end
+                                else
+                                    addText(templ.tText)
+                                end
                             end
-                        end
 
-                        if templ.tEvent and eventLib.triggerEvent(eventLib.EVENT.onTrackingTooltipShow, {
-                                    content = tooltipContent,
-                                    markerId = dt[1].id, templateId = templ.id,
-                                    markerUserData = dt[1].userData, templateUserData = templ.userData,
-                                    object = obj and obj.object or nil
-                                }) then
-                            return
-                        end
+                            if templ.tEvent and eventLib.triggerEvent(eventLib.EVENT.onTrackingTooltipShow, {
+                                        content = tooltipContent,
+                                        markerId = dt[1].id, templateId = templ.id,
+                                        markerUserData = dt[1].userData, templateUserData = templ.userData,
+                                        object = obj and obj.object or nil
+                                    }) then
+                                return
+                            end
 
-                        ::continue::
+                        end
                     end
 
                     for _, elemDt in pairs(textLists) do
@@ -305,20 +305,22 @@ local function createMarker(activeData, markerData, obj, pos, grid, uiTemplate)
                     if #tooltipContent > 0 then
                         local newTooltipContent = ui.content{}
 
-                        for i = 1, #tooltipContent - 1 do
+                        local function tooltipContentIter(i)
                             local item = tooltipContent[i]
 
                             if item.props and item.props.text then
                                 if foundTexts[item.props.text] then
-                                    goto continue
+                                    return
                                 end
                                 foundTexts[item.props.text] = true
                             end
 
                             newTooltipContent:add(item)
                             newTooltipContent:add(this.advWMap.uiElements.interval(0, this.advWMap.getConfig().ui.fontSize / 3))
+                        end
 
-                            ::continue::
+                        for i = 1, #tooltipContent - 1 do
+                            tooltipContentIter(i)
                         end
 
                         local lastItem = tooltipContent[#tooltipContent]
@@ -413,15 +415,16 @@ local function register(markerData, objectHandler)
     end
 
     if markerData.positions then
-        for _, posDt in pairs(markerData.positions) do
+        ---@param posDt advWMap_tracking.position
+        local function processPosDt(posDt)
             local cellId = posDt.id or common.worldCellLabel
 
             local data = this.active[cellId]
             local markerHash = getMarkerPosHash(markerData.id, template.layer, posDt.pos)
-            if not data or data.posMarkers[markerHash] then goto continue end
+            if not data or data.posMarkers[markerHash] then return end
 
             if data.registered[markerId] and data.registered[markerId].type ~= markerType.pos then
-                goto continue
+                return
             end
 
             local gridIds
@@ -439,46 +442,48 @@ local function register(markerData, objectHandler)
 
                 if gridMarker then
                     addToMarker(gridMarker, markerData, template)
-                    goto continue
+                    return
                 end
             end
 
             local marker = createMarker(data, markerData, nil, posDt.pos, gridIds)
-            if not marker then goto continue end
+            if not marker then return end
 
             if gridIds and gridTb then
                 for _, gridId in pairs(gridIds) do
                     gridTb[gridId] = marker
                 end
             end
+        end
 
-            ::continue::
+        for _, posDt in pairs(markerData.positions) do
+            processPosDt(posDt)
         end
     end
 
     if objectHandler then
         if objectHandler and objectHandler.__type ~= "objHandler" then
             local handler = activeObjects.getHandler(objectHandler.recordId)
-            if not handler then goto continue end
+            if not handler then return end
             objectHandler = handler:get(objectHandler.id)
-            if not objectHandler then goto continue end
+            if not objectHandler then return end
         end
 
         -- skip objects that are not in the active cell
         if ((markerData.active or markerData.activeEx and objectHandler.cell and objectHandler.cell.isExterior) or
                 (markerData.distance and markerData.distance <= 8192)) and not objectHandler:isActive() then
-            goto continue
+            return
         end
 
         local cellId = objectHandler.cell.isExterior and common.worldCellLabel or objectHandler.cell.id
         local objId = objectHandler.id
 
         if markerData.objValidateFn and not markerData.objValidateFn(markerData, template, objectHandler.object) then
-            goto continue
+            return
         end
 
         local data = this.active[cellId]
-        if not data then goto continue end
+        if not data then return end
 
         if data.registered[markerId] and data.registered[markerId].type ~= markerType.object then
             removeRegisteredMarkers(data, markerId)
@@ -487,15 +492,13 @@ local function register(markerData, objectHandler)
         local objMarker = data.objectMarkers[objId]
         if objMarker then
             local userData = objMarker:getUserData()
-            if not userData then goto continue end
+            if not userData then return end
 
             userData.obj = objectHandler
             addToMarker(objMarker, markerData, template)
         else
             local marker = createMarker(data, markerData, objectHandler)
         end
-
-        ::continue::
     end
 end
 

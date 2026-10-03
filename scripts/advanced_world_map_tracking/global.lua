@@ -76,13 +76,12 @@ local function getObjectsFromRegion(region)
     for x = math.ceil(region.left / 8192), math.ceil(region.right / 8192) do
         for y = math.ceil(region.bottom / 8192), math.ceil(region.top / 8192) do
             local cellId = commonData.getCellIdByGrid(x, y)
-            if not availableCellIdsMap[cellId] then goto continue end
-            local cell = world.getExteriorCell(x, y)
-            if not cell then goto continue end
-
-            requestObjectsFromCell(cell)
-
-            ::continue::
+            if availableCellIdsMap[cellId] then
+                local cell = world.getExteriorCell(x, y)
+                if cell then
+                    requestObjectsFromCell(cell)
+                end
+            end
         end
     end
 end

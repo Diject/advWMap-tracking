@@ -176,21 +176,20 @@ local effectData = {
 }
 
 
-local function func()
-    for _, data in pairs(effectData) do
-        if data.isEnabled and not data.isEnabled() or not data.cfg.enabled then
+local function processEffData(data)
+    if data.isEnabled and not data.isEnabled() or not data.cfg.enabled then
             if data.markerId then
                 advWMap_tracking.removeMarker(data.markerId)
                 data.markerId = nil
                 data.cache = {}
             end
-            goto continue
+            return
         end
 
         local eff = effects:getEffect(data.effect)
         local magnitude = eff.magnitude
 
-        if magnitude == data.lastMagnitude then goto continue end
+        if magnitude == data.lastMagnitude then return end
 
         if data.markerId then
             advWMap_tracking.removeMarker(data.markerId)
@@ -223,8 +222,12 @@ local function func()
         end
 
         data.lastMagnitude = magnitude
+end
 
-        ::continue::
+
+local function func()
+    for _, data in pairs(effectData) do
+        processEffData(data)
     end
 
     async:newUnsavableSimulationTimer(0.25, func)

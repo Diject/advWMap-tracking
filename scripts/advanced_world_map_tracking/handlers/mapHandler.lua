@@ -62,19 +62,21 @@ end
 
 
 local function addObjectMarkers(cellIdMap)
+    local function processMarkerObj(markerData, obj)
+        if not obj:isValid() or not obj.cell or not cellIdMap[obj.cell.id] then return end
+        local handler = activeObjects.getHandler(obj.recordId)
+        if not handler then return end
+        local objHandler = handler:get(obj.id)
+
+        if objHandler then
+            activeMarkers.register(markerData, objHandler)
+        end
+    end
+
     for _, markerData in dataHandler.iterMarkerGroup(common.objectsLabel) do
         for _, obj in pairs(markerData.objects or {}) do
 
-            if not obj:isValid() or not obj.cell or not cellIdMap[obj.cell.id] then goto continue end
-            local handler = activeObjects.getHandler(obj.recordId)
-            if not handler then goto continue end
-            local objHandler = handler:get(obj.id)
-
-            if objHandler then
-                activeMarkers.register(markerData, objHandler)
-            end
-
-            ::continue::
+            processMarkerObj(markerData, obj)
         end
     end
 
