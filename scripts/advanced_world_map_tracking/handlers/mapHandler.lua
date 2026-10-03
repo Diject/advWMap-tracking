@@ -65,7 +65,7 @@ local function addObjectMarkers(cellIdMap)
     for _, markerData in dataHandler.iterMarkerGroup(common.objectsLabel) do
         for _, obj in pairs(markerData.objects or {}) do
 
-            if not obj:isValid() or not cellIdMap[obj.cell.id] then goto continue end
+            if not obj:isValid() or not obj.cell or not cellIdMap[obj.cell.id] then goto continue end
             local handler = activeObjects.getHandler(obj.recordId)
             if not handler then goto continue end
             local objHandler = handler:get(obj.id)

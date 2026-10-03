@@ -38,6 +38,10 @@ local markerType = {
     object = 2,
 }
 
+local defaultTemplate = {
+    type = ui.TYPE.Container,
+}
+
 ---@class activeMarkers.activeData
 ---@field mapWidget AdvancedWorldMap.MapWidget
 ---@field registered table<string, {type: integer, markers: table<string, AdvancedWorldMap.MapElement>}> by marker id, markers by marker hash or object id
@@ -144,9 +148,13 @@ end
 ---@param markerData advWMap_tracking.markerData
 ---@param obj advWMap_tracking.objectHandler?
 ---@param pos Vector3|Vector2?
-local function createMarker(activeData, markerData, obj, pos, grid)
+local function createMarker(activeData, markerData, obj, pos, grid, uiTemplate)
     local template = dataHandler.getMarkerTemplate(markerData)
     if not template then return end
+
+    if template.uiTemplate and not uiTemplate then
+        uiTemplate = template.uiTemplate
+    end
 
     local mapWidget = activeData.mapWidget
 
@@ -191,6 +199,7 @@ local function createMarker(activeData, markerData, obj, pos, grid)
         layerId = mapWidget.LAYER[template.layer or "marker"],
         pos = pos or obj and obj.position, ---@diagnostic disable-line: assign-type-mismatch
         texture = texture,
+        template = uiTemplate,
         size = template.size or util.vector2(10, 10),
         color = template.color or common.defaultColor,
         visible = false,
@@ -353,7 +362,33 @@ local function addToMarker(marker, markerData, template)
     ---@type activeMarkers.markerUserdata
     local userData = marker:getUserData()
     if not userData then return false end
+    local oldHasTemplate = userData.hasTemplate or false
     if not userData:addMarkerData(markerData, template) then return false end
+
+    if userData.hasTemplate and not oldHasTemplate then
+        userData:remove()
+        local first = true
+        for _, dt in pairs(userData.data) do
+            if first then
+                local m = createMarker(
+                    userData.activeData,
+                    dt[1],
+                    userData.obj,
+                    userData.lastPos,
+                    userData.grid,
+                    dt[2].uiTemplate or defaultTemplate
+                )
+                if userData.grid then
+                    local gridTb = markerData.zoomOut and userData.activeData.gridOut or userData.activeData.grid
+                    if gridTb then
+                        for _, gridId in pairs(userData.grid) do
+                            gridTb[gridId] = marker
+                        end
+                    end
+                end
+            end
+        end
+    end
 
     this.requestUpdate = true
 
@@ -572,7 +607,6 @@ function this.startUpdateVisibilityCoroutine(cellId, realTimer)
     if not data then return false end
 
     visibilityKeyCounter = nil
-    local index = 0
 
     if this.coroutine then
         this.coroutine()
@@ -583,28 +617,19 @@ function this.startUpdateVisibilityCoroutine(cellId, realTimer)
     local function func()
         local tm = core.getRealTime()
 
-        local repeated = visibilityKeyCounter and 0 or 1
+        local currentMarker = data.activeMarkers[visibilityKeyCounter]
         for i = 1, config.data.tracking.visibilityUpdateStepLimit do
             if visibilityKeyCounter and not data.activeMarkers[visibilityKeyCounter] then visibilityKeyCounter = nil end
             local k, markerUserData = next(data.activeMarkers, visibilityKeyCounter)
             visibilityKeyCounter = k
-            if not markerUserData then
-                repeated = repeated + 1
-                if repeated >= 2 then
-                    break
-                end
-                goto continue
+            if markerUserData then
+                markerUserData:updateMarkerVisibility(tm)
             end
-
-            markerUserData:updateMarkerVisibility(tm)
-
-            ::continue::
-            index = index + 1
 
             local rt = core.getRealTime()
             local tDiff = rt - tm
 
-            if tDiff > config.data.tracking.visibilityUpdateTimeLimit then break end
+            if currentMarker == markerUserData or tDiff > config.data.tracking.visibilityUpdateTimeLimit then break end
         end
 
         for i = 1, config.data.tracking.markersPerFrame do

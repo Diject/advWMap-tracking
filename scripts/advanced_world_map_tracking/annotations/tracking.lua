@@ -26,6 +26,7 @@ local EVENT = {
 ---@field path string
 ---@field pathA string?
 ---@field pathB string?
+---@field uiTemplate any? OpenMW UI template table. Must be Container type. 
 ---@field layer string? -- default: "marker"
 ---@field size Vector2
 ---@field color Color?
@@ -60,6 +61,7 @@ local EVENT = {
 ---@field invalid boolean? -- set to true when the marker is removed or its object is deleted; do not set this manually
 ---@field isVisibleFn (fun(marker: AdvWMap_tracking.MarkerData, template: AdvWMap_tracking.TemplateData, object: GameObject?):boolean)|nil -- function to determine if the marker is visible
 ---@field objValidateFn (fun(marker: AdvWMap_tracking.MarkerData, template: AdvWMap_tracking.TemplateData, object: GameObject):boolean)|nil -- function to validate the object for the marker
+---@field onUpdate (fun(marker: AdvWMap_tracking.MarkerData, template: AdvWMap_tracking.TemplateData, object: GameObject?))|nil -- triggered when the marker updates
 
 
 ---@class AdvWMap_tracking.Interface
@@ -73,5 +75,5 @@ local EVENT = {
 ---@field getTemplate fun(id: string): AdvWMap_tracking.TemplateData?
 ---@field getMarker fun(id: string): AdvWMap_tracking.MarkerData?
 ---@field isValid fun(id: string): boolean -- returns false if the marker/template has been removed
----@field getMarkers fun(groupId: string): AdvWMap_tracking.MarkerData[] -- returns markers for the specified group (cell ID for position markers, '__objects__' for object markers, '__types__' for type markers, '__records__' for record markers or object ID/type/recordId for object-based markers); returns an empty list if no markers are found
+---@field getMarkers fun(groupId: string): AdvWMap_tracking.MarkerData[] -- returns markers for the specified group (cell ID / `__positions__` / `__world_cell__` for position markers, `__objects__` for object markers, `__types__` for type markers, `__records__` for record markers or object ID/type/recordId for object-based markers); returns an empty list if no markers are found
 ---@field update fun()

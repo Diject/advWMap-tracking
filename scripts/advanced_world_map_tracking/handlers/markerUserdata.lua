@@ -18,6 +18,10 @@ local markerType = {
     object = 2,
 }
 
+local defaultTemplate = {
+    type = ui.TYPE.Container,
+}
+
 
 ---@param markerData advWMap_tracking.markerData
 ---@param template advWMap_tracking.markerTemplateData
@@ -43,6 +47,8 @@ function this:addMarkerData(markerData, template)
             self.activeData.posMarkers[self.posHash] = self.marker
         end
     end
+
+    self.hasTemplate = self.hasTemplate or template.uiTemplate and true or nil
 
     self:updateMarker()
 
@@ -227,6 +233,7 @@ function this:updateMarker()
         anchor = template and template.anchor or util.vector2(0.5, 0.5),
         pos = self.obj and self.obj.position or nil, ---@diagnostic disable-line: assign-type-mismatch
         visible = template ~= nil and isVisible,
+        template = self.hasTemplate and (template and template.uiTemplate or defaultTemplate) or nil
     }
     self.marker:restoreLayout()
 
@@ -298,6 +305,10 @@ function this:updateMarkerVisibility(tm)
             return self:updateMarker()
         end
         isVisible = isVisible or self:isDataVisible(dt, tm)
+
+        if mkd.onUpdate then
+            mkd.onUpdate(mkd, mkt, self.obj) ---@diagnostic disable-line: param-type-mismatch
+        end
     end
 
     if isVisible and self.obj then
@@ -358,11 +369,18 @@ end
 function this:triggerOnClick(btn)
     for _, mkd, mkt in self:dataIterator() do
 
-        if mkt.onClick then
+        if mkt.onClick and self:isDataVisible({mkd, mkt}) then
             if type(mkt.onClick) == "string" then
-                mkd = tableLib.copy(mkd)
+                local mkd = tableLib.copy(mkd)
                 mkd.isVisibleFn = nil
                 mkd.objValidateFn = nil
+                mkd.onUpdate = nil
+                if type(mkd.template) == "table" then
+                    mkd.template = tableLib.copy(mkd.template)
+                    mkd.template.uiTemplate = nil
+                end
+                local mkt = tableLib.copy(mkt)
+                mkt.uiTemplate = nil
                 playerRef:sendEvent(mkt.onClick, {
                     button = btn,
                     marker = mkd,

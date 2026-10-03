@@ -39,6 +39,7 @@ local config = require("scripts.advanced_world_map_tracking.config.configLib")
 ---@field path string
 ---@field pathA string?
 ---@field pathB string?
+---@field uiTemplate any?
 ---@field layer string?
 ---@field size Vector2
 ---@field color Color?
@@ -74,6 +75,7 @@ local config = require("scripts.advanced_world_map_tracking.config.configLib")
 ---@field invalid boolean?
 ---@field isVisibleFn fun(marker: advWMap_tracking.markerData, template: advWMap_tracking.markerTemplateData, object: GameObject?):boolean
 ---@field objValidateFn fun(marker: advWMap_tracking.markerData, template: advWMap_tracking.markerTemplateData, object: GameObject):boolean
+---@field onUpdate fun(marker: advWMap_tracking.markerData, template: advWMap_tracking.markerTemplateData, object: GameObject?):boolean
 
 
 I.Settings.registerGroup{
@@ -347,7 +349,7 @@ end
 return {
     interfaceName = "AdvWMap_tracking",
     interface = {
-        version = 1,
+        version = 2,
         addMarker = addMarker,
         addTemplate = addTemplate,
         removeMarker = removeMarker,
@@ -389,6 +391,7 @@ return {
             return data
         end,
         onLoad = function (data)
+            data = data or {}
             uniqueId.load(data)
             mapData.load(data)
         end,

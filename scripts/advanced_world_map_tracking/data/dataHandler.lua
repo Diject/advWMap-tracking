@@ -23,26 +23,50 @@ function this.load(dataTable)
 end
 
 
+local function deepcopyMarkerTable(tb, prevKey)
+    local new = nil
+	if type(tb) == "table" then
+		new = {}
+		for k, v in pairs(tb) do
+            if not prevKey or k ~= "uiTemplate" or prevKey == "userData" then
+			    new[deepcopyMarkerTable(k)] = deepcopyMarkerTable(v, k)
+            end
+		end
+	else
+		new = tb
+	end
+
+    return new
+end
+
+
 function this.save(dataTable)
     ---@type table<string, advWMap_tracking.markerTemplateData>
-    local templates = tableLib.deepcopy(this.templates)
+    local templates = deepcopyMarkerTable(this.templates)
     for id, data in pairs(templates) do
-        if data.invalid or data.temp ~= false or data.short then
+        if data.invalid or data.temp ~= false or data.short or data.uiTemplate then
             templates[id] = nil
         end
     end
 
     ---@type table<string, table<string, advWMap_tracking.markerData>>
-    local markers = tableLib.deepcopy(this.markers)
+    local markers = deepcopyMarkerTable(this.markers)
 
     for groupId, cellData in pairs(markers) do
+        local hasData = false
         for id, data in pairs(cellData) do
             if not data.template or
                     (type(data.template) == "string" and not templates[data.template]) or
                     data.temp ~= false or data.short or data.objects or data.invalid or data.isVisibleFn or
-                    data.objValidateFn then
+                    data.objValidateFn or data.onUpdate then
                 (markers[groupId] or {})[id] = nil
+            else
+                hasData = true
             end
+        end
+
+        if not hasData then
+            markers[groupId] = nil
         end
     end
 
