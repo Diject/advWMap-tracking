@@ -296,6 +296,47 @@ local function init()
                 }
             }
         end
+
+        if effectData.detectKey.markerId and e.markerId == effectData.detectKey.markerId and
+                object.type.inventory then
+
+            local items = {}
+            local inventory = object.type.inventory(object)
+            for _, item in pairs(inventory:getAll(types.Miscellaneous)) do
+                if item.recordId:find("^key_") then
+                    local record = item.type.record(item.recordId)
+                    if record and record.name and record.name ~= "" then
+                        items[record.name] = true
+                    end
+                end
+            end
+
+            if not next(items) then return end
+
+            items = tableLib.keys(items)
+
+            local screenSize = ui.layers[1].size
+            local tooltipWidth = screenSize.x / 5
+
+            local t = stringLib.getValueEnumString(items, config.data.spDetection.enchantment.maxTooltipItems, l10n("KeyDetectedTooltip"))
+
+            e.content:add{
+                type = ui.TYPE.TextEdit,
+                props = {
+                    text = t,
+                    textColor = advWMap.getConfig().ui.defaultColor, ---@diagnostic disable-line: undefined-field
+                    textSize = advWMap.getConfig().ui.fontSize, ---@diagnostic disable-line: undefined-field
+                    anchor = util.vector2(0.5, 0.5),
+                    size = util.vector2(tooltipWidth, 0),
+                    multiline = true,
+                    wordWrap = true,
+                    textAlignH = ui.ALIGNMENT.Center,
+                    textAlignV = ui.ALIGNMENT.Center,
+                    readOnly = true,
+                    autoSize = true,
+                }
+            }
+        end
     end)
 
     async:newUnsavableSimulationTimer(0.25, func)

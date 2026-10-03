@@ -4,6 +4,7 @@ ModDescription: "Adds object tracking features to Advanced World Map."
 andMorePattern: "and %d more"
 
 EnchantmentDetectedTooltip: "Enchanted items: %s"
+KeyDetectedTooltip: "Keys: %s"
 
 RemoveAllGroup: "Remove"
 RemoveAllMarkers: "Remove all markers"

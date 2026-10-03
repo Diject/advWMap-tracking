@@ -29,6 +29,26 @@ function this.values(t, sort)
 end
 
 
+---@param tb table
+--- @param sort boolean|(fun(a: any, b: any):boolean)|nil
+--- @return table values
+function this.keys(tb, sort)
+    local out = {}
+    for key, _ in pairs(tb) do
+        table.insert(out, key)
+    end
+
+    if sort then
+        if sort == true then
+            sort = nil
+        end
+        table.sort(out, sort)
+    end
+
+    return out
+end
+
+
 ---@param from table
 ---@return table
 function this.deepcopy(from, to)
