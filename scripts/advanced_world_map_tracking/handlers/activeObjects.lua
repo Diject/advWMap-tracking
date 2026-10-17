@@ -216,7 +216,7 @@ function this.getObjectByCellIdIterator(cellId)
     local function iterator(tbl, key)
         local nextKey, obj = next(tbl, key)
         while nextKey do
-            if obj:isValid() then
+            if obj:isValid() and obj.cell then
                 return nextKey, obj
             end
             nextKey, obj = next(tbl, nextKey)

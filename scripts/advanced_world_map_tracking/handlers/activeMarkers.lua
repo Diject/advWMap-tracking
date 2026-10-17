@@ -690,7 +690,7 @@ function this.removeMarkersOutsideRegion(region)
     for _, marker in ipairs(toRemove) do
         ---@type activeMarkers.markerUserdata
         local userData = marker:getUserData()
-        if userData then
+        if userData and (not userData.obj or not userData.obj:isActive()) then
             userData:remove()
         end
     end

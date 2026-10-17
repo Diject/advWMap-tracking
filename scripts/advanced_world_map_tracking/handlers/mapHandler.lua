@@ -18,6 +18,8 @@ local advancedWorldMap = nil
 
 ---@type table<string, string>
 this.activeCells = {}
+---@type table<string, table<string, any>>
+this.exRegisteredHash = {}
 
 
 
@@ -61,7 +63,7 @@ local function addPosMarkers(cellIdMap, rect, isZoomOut)
 end
 
 
-local function addObjectMarkers(cellIdMap)
+local function addObjectMarkers(cellIdMap, isExterior)
     local function processMarkerObj(markerData, obj)
         if not obj:isValid() or not obj.cell or not cellIdMap[obj.cell.id] then return end
         local handler = activeObjects.getHandler(obj.recordId)
@@ -81,20 +83,43 @@ local function addObjectMarkers(cellIdMap)
     end
 
     for _, markerData in dataHandler.iterMarkerGroup(common.recordsLabel) do
+        local activeFlag = markerData.active or markerData.activeEx and isExterior
         for _, recordId in pairs(markerData.records or {}) do
             for _, objHandler in activeObjects.getObjectIterator(recordId) do
-                if cellIdMap[objHandler.cell.id] then
+                if cellIdMap[objHandler.cell.id] and (not activeFlag or objHandler:isActive()) then
                     activeMarkers.register(markerData, objHandler)
                 end
             end
         end
     end
 
+    local markersByType = {}
     for _, markerData in dataHandler.iterMarkerGroup(common.typesLabel) do
         for _, typeId in pairs(markerData.types or {}) do
-            for _, objHandler in activeObjects.getObjectIterator(typeId) do
-                if cellIdMap[objHandler.cell.id] then
-                    activeMarkers.register(markerData, objHandler)
+            markersByType[typeId] = markersByType[typeId] or {}
+            table.insert(markersByType[typeId], markerData)
+        end
+    end
+
+    for cId, _ in pairs(cellIdMap) do
+        local cCache = this.exRegisteredHash[cId]
+        if not cCache then
+            cCache = {}
+            this.exRegisteredHash[cId] = cCache
+        end
+
+        for _, objHandler in activeObjects.getObjectIterator(cId) do
+            local markerDatas = markersByType[tostring(objHandler.type)]
+            if markerDatas then
+                for _, markerData in pairs(markerDatas) do
+                    local hash = objHandler.id..markerData.id
+                    if not cCache[hash] then
+                        local activeFlag = markerData.active or markerData.activeEx and isExterior
+                        if cellIdMap[objHandler.cell.id] and (not activeFlag or objHandler:isActive()) then
+                            activeMarkers.register(markerData, objHandler)
+                        end
+                        cCache[hash] = true
+                    end
                 end
             end
         end
@@ -138,6 +163,9 @@ function this.init()
     events.registerHandler(events.EVENT.onMapDestroyed, function (e)
         activeMarkers.unregisterMapWidget(e.mapWidget)
         removeActiveCells(e.mapWidget.cellId)
+        if not e.mapWidget.cellId then
+            this.exRegisteredHash = {}
+        end
     end)
 
 
@@ -151,36 +179,56 @@ function this.init()
 
         if e.mapWidget.cellId then return end
 
-        if lastUpdatedRect and lastUpdatedRect.left == e.region.left and lastUpdatedRect.right == e.region.right and
-                lastUpdatedRect.top == e.region.top and lastUpdatedRect.bottom == e.region.bottom then
+        ---@type AdvancedWorldMap.MapWidget.Region
+        local rect = tableLib.copy(e.region)
+        rect.top = math.floor(rect.top / 8192) * 8192
+        rect.left = math.floor(rect.left / 8192) * 8192
+        rect.right = math.floor(rect.right / 8192) * 8192
+        rect.bottom = math.floor(rect.bottom / 8192) * 8192
+
+        if lastUpdatedRect and lastUpdatedRect.left == rect.left and lastUpdatedRect.right == rect.right and
+                lastUpdatedRect.top == rect.top and lastUpdatedRect.bottom == rect.bottom then
             return
         end
 
-        lastUpdatedRect = e.region
+        lastUpdatedRect = rect
 
         activeMarkers.clearRegisterQueue()
-        activeMarkers.removeMarkersOutsideRegion(e.region)
-        removeActiveCells()
+        activeMarkers.removeMarkersOutsideRegion(rect)
 
         local cells = {}
 
         local isZoomOut = not e.mapWidget:isInZoomInMode()
 
         if isZoomOut then
-            addPosMarkers(cells, e.region, true)
+            addPosMarkers(cells, rect, true)
+            removeActiveCells()
             this.activeCells[common.worldCellLabel] = common.worldCellLabel
         else
-            local region = e.region
-            for x = math.floor(region.left / 8192), math.floor(region.right / 8192) do
-                for y = math.floor(region.bottom / 8192), math.floor(region.top / 8192) do
+            local newActiveCells = {}
+            for x = math.floor(rect.left / 8192), math.floor(rect.right / 8192) do
+                for y = math.floor(rect.bottom / 8192), math.floor(rect.top / 8192) do
                     local cId = common.getCellIdByGrid(x, y)
                     cells[cId] = true
-                    this.activeCells[cId] = common.worldCellLabel
+                    if not this.activeCells[cId] then
+                        newActiveCells[cId] = common.worldCellLabel
+                    end
                 end
             end
 
-            addPosMarkers(cells, e.region, false)
-            addObjectMarkers(cells)
+            for cId, _ in pairs(this.activeCells) do
+                if not cells[cId] then
+                    this.exRegisteredHash[cId] = nil
+                end
+            end
+
+            removeActiveCells()
+            for cId, _ in pairs(cells) do
+                this.activeCells[cId] = common.worldCellLabel
+            end
+
+            addPosMarkers(newActiveCells, rect, false)
+            addObjectMarkers(newActiveCells, true)
         end
     end
     events.registerHandler(events.EVENT.onZoomMarkersUpdated, onZoomMarkersUpdatedCallback)
