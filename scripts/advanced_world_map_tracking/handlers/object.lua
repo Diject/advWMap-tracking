@@ -12,7 +12,7 @@ local this = {}
 ---@class advWMap_tracking.objectHandler
 local objectHandler = {}
 
-objectHandler.__type = "objHandler"
+objectHandler.__Type = "objHandler"
 
 local objectHandlerProps = {}
 

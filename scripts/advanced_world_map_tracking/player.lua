@@ -373,7 +373,7 @@ end
 return {
     interfaceName = "AdvWMap_tracking",
     interface = {
-        version = 2,
+        version = 3,
         addMarker = addMarker,
         addTemplate = addTemplate,
         removeMarker = removeMarker,

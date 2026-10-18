@@ -23,7 +23,7 @@ local EVENT = {
 ---@field object GameObject?
 
 ---@class AdvWMap_tracking.objectHandler
----@field __type string always "objHandler"
+---@field __Type string always "objHandler"
 ---@field object GameObject
 ---@field recordId string
 ---@field id string

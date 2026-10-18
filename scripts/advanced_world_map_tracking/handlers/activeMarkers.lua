@@ -462,7 +462,7 @@ local function register(markerData, objectHandler)
     end
 
     if objectHandler then
-        if objectHandler and objectHandler.__type ~= "objHandler" then
+        if objectHandler and objectHandler.__Type ~= "objHandler" then
             local handler = activeObjects.getHandler(objectHandler.recordId)
             if not handler then return end
             objectHandler = handler:get(objectHandler.id)
