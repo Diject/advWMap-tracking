@@ -13,6 +13,7 @@ RemoveAllMarkersDescription: "Set to \"Yes\" to remove all markers for the curre
 SpellDetection: "Spell Detection"
 DetectAnimalEnabled: "Detect animals"
 DetectAnimalNPC: "Detect NPCs when detecting animals"
+DetectAnimalVendors: "Detect merchants and trainers"
 DetectAnimalEnemy: "Detect enemies when detecting animals"
 DetectAnimalEnemyDescription: "Only the base disposition is taken into account. If the actor becomes hostile during gameplay, it will not be detected."
 DetectAnimalNPCColor: "NPC marker color"

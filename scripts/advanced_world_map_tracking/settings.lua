@@ -131,6 +131,7 @@ I.Settings.registerGroup{
     settings = {
         boolSetting{key = "spDetection.animal.enabled", name = "DetectAnimalEnabled", default = config.data.spDetection.animal.enabled},
         boolSetting{key = "spDetection.animal.detectNPC", name = "DetectAnimalNPC", default = config.data.spDetection.animal.detectNPC},
+        boolSetting{key = "spDetection.animal.detectVendors", name = "DetectAnimalVendors", default = config.data.spDetection.animal.detectVendors},
         boolSetting{key = "spDetection.animal.detectEnemy", name = "DetectAnimalEnemy", description = "DetectAnimalEnemyDescription", default = config.data.spDetection.animal.detectEnemy},
         color{key = "spDetection.animal.color", name = "DetectAnimalColor", default = config.data.spDetection.animal.color},
         color{key = "spDetection.animal.npcColor", name = "DetectAnimalNPCColor", default = config.data.spDetection.animal.npcColor},

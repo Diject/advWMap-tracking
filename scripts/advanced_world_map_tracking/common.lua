@@ -38,6 +38,11 @@ this.settingPage = "advWMap_tracking:Settings"
 this.exteriorCellIdFormat = "Esm3ExteriorCell:%d:%d"
 
 this.detectTexture = "textures/icons/advanced_world_map/detectObjectMarker.dds"
+this.vendorTexture = "textures/icons/advanced_world_map/ashop.png"
+this.trainerTexture = "textures/icons/advanced_world_map/atrainer.png"
+this.repairTexture = "textures/icons/advanced_world_map/arepair.png"
+this.spellsTexture = "textures/icons/advanced_world_map/amage.png"
+this.travelTexture = "textures/icons/advanced_world_map/anavigator.png"
 
 
 this.defaultColorData = {202/255, 165/255, 96/255}

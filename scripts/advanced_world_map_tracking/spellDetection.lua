@@ -27,7 +27,8 @@ local enchantmentTypes = {
     [types.Book] = 1,
 }
 
-local effectData = {
+local effectData
+effectData = {
     ["detectAnimal"] = {
         effect = "detectAnimal",
         types = {"Creature"},
@@ -79,6 +80,74 @@ local effectData = {
 
             return isEnemy
         end
+    },
+    ["detectVendors"] = {
+        effect = "detectAnimal",
+        types = {"NPC", "Creature"},
+        icon = commonData.detectTexture,
+        cfg = config.data.spDetection.animal,
+        priority = 0.5,
+        colorId = "enemyColor",
+        alive = true,
+        active = true,
+        tooltipEvent = false,
+        markerId = nil,
+        lastMagnitude = 0,
+        isEnabled = function ()
+            return config.data.spDetection.animal.enabled and config.data.spDetection.animal.detectVendors
+        end,
+        validFunc = function (marker, template, object)
+            if not object then return false end
+
+            local record = object.type.record(object.recordId)
+            if not record then return false end
+
+            local services = record.servicesOffered
+            local texturePath
+
+            if record.travelDestinations and record.travelDestinations[1] and services and services["Travel"] then
+                texturePath = commonData.travelTexture
+            elseif services then
+                if services["Spells"] or services["Spellmaking"] or services["Enchanting"] then
+                    texturePath = commonData.spellsTexture
+                elseif services["Training"] then
+                    texturePath = commonData.trainerTexture
+                elseif services["Barter"] then
+                    texturePath = commonData.vendorTexture
+                elseif services["Repair"] then
+                    texturePath = commonData.repairTexture
+                end
+            end
+
+            if texturePath then
+                local cfg = config.data.spDetection.animal
+                local markerId
+                markerId = advWMap_tracking.addMarker{
+                    template = {
+                        path = texturePath,
+                        size = util.vector2(config.data.spDetection.markerSize, config.data.spDetection.markerSize) * 1.25,
+                        anchor = util.vector2(0.5, 0.5),
+                        color = cfg.npcColor,
+                        tText = "@name@",
+                    },
+                    objects = {object},
+                    priority = 1,
+                    alive = true,
+                    active = true,
+                    short = true,
+                    distance = cfg.distanceMul < 10 and effectData.detectVendors.lastMagnitude * 22.1 * cfg.distanceMul or nil,
+                    onUpdate = function (_, _, obj)
+                        if not markerId then return end
+
+                        if not obj:isValid() or effectData.detectVendors.lastMagnitude <= 0 then
+                            advWMap_tracking.removeMarker(markerId)
+                        end
+                    end,
+                }
+            end
+
+            return false
+        end,
     },
     ["detectKey"] = {
         effect = "detectKey",

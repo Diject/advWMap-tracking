@@ -8,7 +8,7 @@ local this = {}
 
 ---@class advWMap_tracking.config
 this.default = {
-    version = 1,
+    version = 2,
     tracking = {
         aboveBelowHeight = 200,
         itemUpdateTime = 3,
@@ -23,6 +23,7 @@ this.default = {
             enabled = true,
             detectNPC = true,
             detectEnemy = true,
+            detectVendors = true,
             distanceMul = 2,
             color = commonData.detectAnimalColor,
             npcColor = commonData.detectAnimalNPCColor,
