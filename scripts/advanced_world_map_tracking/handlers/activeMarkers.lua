@@ -305,6 +305,7 @@ local function createMarker(activeData, markerData, obj, pos, grid, uiTemplate)
                     if #tooltipContent > 0 then
                         local newTooltipContent = ui.content{}
 
+                        local added = false
                         local function tooltipContentIter(i)
                             local item = tooltipContent[i]
 
@@ -316,18 +317,14 @@ local function createMarker(activeData, markerData, obj, pos, grid, uiTemplate)
                             end
 
                             newTooltipContent:add(item)
-                            newTooltipContent:add(this.advWMap.uiElements.interval(0, this.advWMap.getConfig().ui.fontSize / 3))
+                            added = true
                         end
 
-                        for i = 1, #tooltipContent - 1 do
-                            tooltipContentIter(i)
-                        end
-
-                        local lastItem = tooltipContent[#tooltipContent]
-                        if lastItem.props and lastItem.props.text then
-                            if not foundTexts[lastItem.props.text] then
-                                newTooltipContent:add(lastItem)
+                        for i = 1, #tooltipContent do
+                            if added then
+                                newTooltipContent:add(this.advWMap.uiElements.interval(0, this.advWMap.getConfig().ui.fontSize / 3))
                             end
+                            tooltipContentIter(i)
                         end
 
                         layout.userData.tooltipContent = newTooltipContent
