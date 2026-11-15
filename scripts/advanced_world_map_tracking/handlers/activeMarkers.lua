@@ -462,12 +462,18 @@ local function register(markerData, objectHandler)
     end
 
     if objectHandler then
-        if objectHandler and objectHandler.__Type ~= "objHandler" then
+        if objectHandler.__Type ~= "objHandler" then
             local handler = activeObjects.getHandler(objectHandler.recordId)
             if not handler then return end
             objectHandler = handler:get(objectHandler.id)
             if not objectHandler then return end
         end
+
+        local cellId = objectHandler.cell.isExterior and common.worldCellLabel or objectHandler.cell.id
+        local objId = objectHandler.id
+
+        local data = this.active[cellId]
+        if not data then return end
 
         -- skip objects that are not in the active cell
         if ((markerData.active or markerData.activeEx and objectHandler.cell and objectHandler.cell.isExterior) or
@@ -475,15 +481,9 @@ local function register(markerData, objectHandler)
             return
         end
 
-        local cellId = objectHandler.cell.isExterior and common.worldCellLabel or objectHandler.cell.id
-        local objId = objectHandler.id
-
         if markerData.objValidateFn and not markerData.objValidateFn(markerData, template, objectHandler.object) then
             return
         end
-
-        local data = this.active[cellId]
-        if not data then return end
 
         if data.registered[markerId] and data.registered[markerId].type ~= markerType.object then
             removeRegisteredMarkers(data, markerId)
@@ -506,7 +506,7 @@ end
 ---@param markerData advWMap_tracking.markerData
 ---@param objectHandler advWMap_tracking.objectHandler?
 function this.register(markerData, objectHandler)
-    if this.registeredMarkersCount > config.data.tracking.markersPerFrame then
+    if this.activeMenu and this.registeredMarkersCount > config.data.tracking.markersPerFrame then
         table.insert(this.registerMarkerQueue, {markerData = markerData, objectHandler = objectHandler})
         return
     end
