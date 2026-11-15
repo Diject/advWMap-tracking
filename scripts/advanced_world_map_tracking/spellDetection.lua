@@ -60,6 +60,7 @@ local effectData = {
         priority = 0.5,
         colorId = "enemyColor",
         alive = true,
+        active = true,
         tooltipEvent = false,
         markerId = nil,
         lastMagnitude = 0,
@@ -81,7 +82,7 @@ local effectData = {
     },
     ["detectKey"] = {
         effect = "detectKey",
-        types = {"Miscellaneous", "Creature", "NPC", "Container"},
+        types = {"Miscellaneous"},
         icon = commonData.detectTexture,
         cfg = config.data.spDetection.key,
         tooltipEvent = true,
@@ -100,15 +101,37 @@ local effectData = {
             marker.userData.cache[object.id] = cache
             cache[1] = tm + 3 + math.random() * 2
 
-            if object.type == types.Miscellaneous then
-                if object.recordId:find("^key_") then
-                    cache[2] = true
-                    return true
-                end
-
-                cache[2] = false
-                return false
+            if object.recordId:find("^key_") then
+                cache[2] = true
+                return true
             end
+
+            cache[2] = false
+
+            return false
+        end
+    },
+    ["detectActorKey"] = {
+        effect = "detectKey",
+        types = {"Creature", "NPC", "Container"},
+        icon = commonData.detectTexture,
+        cfg = config.data.spDetection.key,
+        tooltipEvent = true,
+        active = true,
+        markerId = nil,
+        lastMagnitude = 0,
+        cache = {},
+        func = function (marker, template, object)
+            if not object then return false end
+
+            local tm = core.getSimulationTime()
+            local cache = marker.userData.cache[object.id]
+            if not cache then cache = {} end
+            if (cache[1] or 0) > tm then
+                return cache[2]
+            end
+            marker.userData.cache[object.id] = cache
+            cache[1] = tm + 3 + math.random() * 2
 
             if not object.type.inventory then return false end
 
@@ -126,11 +149,45 @@ local effectData = {
     },
     ["detectEnchantment"] = {
         effect = "detectEnchantment",
-        types = {"Armor", "Clothing", "Weapon", "Book", "Creature", "NPC", "Container"},
+        types = {"Armor", "Clothing", "Weapon", "Book"},
         icon = commonData.detectTexture,
         cfg = config.data.spDetection.enchantment,
         priority = 1,
         tooltipEvent = true,
+        markerId = nil,
+        lastMagnitude = 0,
+        cache = {},
+        func = function (marker, template, object)
+            if not object then return false end
+
+            local tm = core.getSimulationTime()
+            local cache = marker.userData.cache[object.id]
+            if not cache then cache = {} end
+            if (cache[1] or 0) > tm then
+                return cache[2]
+            end
+            marker.userData.cache[object.id] = cache
+            cache[1] = tm + 3 + math.random() * 2
+
+            local record = object.type.record(object.recordId)
+            if record and record.enchant then
+                cache[2] = true
+                return true
+            end
+
+            cache[2] = false
+            return false
+        end
+    },
+
+    ["detectActorEnchantment"] = {
+        effect = "detectEnchantment",
+        types = {"Creature", "NPC", "Container"},
+        icon = commonData.detectTexture,
+        cfg = config.data.spDetection.enchantment,
+        priority = 1,
+        tooltipEvent = true,
+        active = true,
         markerId = nil,
         lastMagnitude = 0,
         cache = {},
@@ -161,12 +218,6 @@ local effectData = {
 
                 cache[2] = false
                 return false
-            end
-
-            local record = object.type.record(object.recordId)
-            if record and record.enchant then
-                cache[2] = true
-                return true
             end
 
             cache[2] = false
@@ -212,6 +263,7 @@ local function processEffData(data)
                 types = data.types,
                 priority = data.priority,
                 alive = data.alive,
+                active = data.active,
                 distance = data.cfg.distanceMul < 10 and magnitude * 22.1 * data.cfg.distanceMul or nil,
                 userData = data,
                 isVisibleFn = data.func,
@@ -252,7 +304,7 @@ local function init()
         local object = e.object
         if not object then return end
 
-        if effectData.detectEnchantment.markerId and e.markerId == effectData.detectEnchantment.markerId and
+        if effectData.detectActorEnchantment.markerId and e.markerId == effectData.detectActorEnchantment.markerId and
                 object.type.inventory then
 
             local items = {}
@@ -297,7 +349,7 @@ local function init()
             }
         end
 
-        if effectData.detectKey.markerId and e.markerId == effectData.detectKey.markerId and
+        if effectData.detectActorKey.markerId and e.markerId == effectData.detectActorKey.markerId and
                 object.type.inventory then
 
             local items = {}
