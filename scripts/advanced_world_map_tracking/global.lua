@@ -1,6 +1,7 @@
 local async = require("openmw.async")
 local types = require("openmw.types")
 local world = require("openmw.world")
+local core = require("openmw.core")
 
 local commonData = require("scripts.advanced_world_map_tracking.common")
 local supportedObjectTypes = require("scripts.advanced_world_map_tracking.supportedObjectTypes")
@@ -28,7 +29,7 @@ local function onObjectActiveGlobal(object)
         if not object:hasScript(commonData.objectScriptPath) then
 
             sendEventToPlayers("advWMap_tracking:addActiveObject", object)
-            object:addScript(commonData.objectScriptPath)
+            object:addScript(commonData.objectScriptPath, {tm = core.getRealTime()})
 
         end
     end
@@ -98,8 +99,8 @@ end
 
 return {
     engineHandlers = {
-        onObjectActive = async:callback(onObjectActiveGlobal),
-        onItemActive = async:callback(onObjectActiveGlobal),
+        onObjectActive = onObjectActiveGlobal,
+        onItemActive = onObjectActiveGlobal,
     },
     eventHandlers = {
         ["advWMap_tracking:objectInactive"] = objectInactive,
